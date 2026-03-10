@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
 
 // Interpolate between two RGB colors based on progress (0-1)
 function lerpColor(
@@ -20,6 +21,7 @@ const BURGUNDY: [number, number, number] = [140, 20, 20]; // deep burgundy-red
 export default function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const [bgColor, setBgColor] = useState(lerpColor(CREAM, BURGUNDY, 0));
+  const { tr } = useLanguage();
 
   useEffect(() => {
     const el = sectionRef.current;
@@ -59,7 +61,7 @@ export default function HeroSection() {
 
       <div className="text-center section-content">
         <p className="text-sm md:text-base uppercase tracking-[0.4em] text-dark/40 font-medium mb-6">
-          Software Engineer &amp; Web Developer
+          {tr.hero.role}
         </p>
         <h1 className="text-5xl md:text-7xl lg:text-[6.5rem] font-black uppercase leading-[0.9] tracking-tight text-dark">
           Code With A
@@ -68,7 +70,7 @@ export default function HeroSection() {
           Clean Logic
         </h1>
         <p className="mt-8 text-dark/50 text-base md:text-lg max-w-md mx-auto leading-relaxed">
-          Создаю быстрые, масштабируемые и красивые веб-приложения с вниманием к деталям.
+          {tr.hero.sub}
         </p>
       </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
 
 const skills = [
   {
@@ -27,6 +28,7 @@ const skills = [
 
 export default function SkillsSection() {
   const sectionRef = useRef<HTMLElement>(null);
+  const { tr } = useLanguage();
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -51,13 +53,13 @@ export default function SkillsSection() {
       <div className="max-w-5xl w-full">
         <div className="section-content mb-12 md:mb-16 text-center">
           <span className="text-xs uppercase tracking-[0.3em] text-cream/40 font-medium">
-            02 / Skills
+            {tr.skills.label}
           </span>
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-black uppercase mt-4 text-cream leading-tight">
-            What I <span className="text-accent">Know</span>
+            {tr.skills.title}
           </h2>
           <p className="mt-4 text-cream/50 text-base md:text-lg max-w-xl mx-auto">
-            Технологии и инструменты, с которыми я работаю каждый день
+            {tr.skills.sub}
           </p>
         </div>
 

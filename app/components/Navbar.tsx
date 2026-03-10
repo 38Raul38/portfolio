@@ -2,14 +2,15 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "../contexts/LanguageContext";
 
-const navLinks = [
-  { label: "Home", href: "#home", num: "01" },
-  { label: "About", href: "#about", num: "02" },
-  { label: "Skills", href: "#skills", num: "03" },
-  { label: "Projects", href: "#projects", num: "04" },
-  { label: "Experience", href: "#experience", num: "05" },
-  { label: "Contact", href: "#contact", num: "06" },
+const navItems = [
+  { key: "home",       href: "#home",       num: "01" },
+  { key: "about",      href: "#about",      num: "02" },
+  { key: "skills",     href: "#skills",     num: "03" },
+  { key: "projects",   href: "#projects",   num: "04" },
+  { key: "experience", href: "#experience", num: "05" },
+  { key: "contact",    href: "#contact",   num: "06" },
 ];
 
 const ease: [number, number, number, number] = [0.76, 0, 0.24, 1];
@@ -86,6 +87,8 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
   const [scrolled, setScrolled] = useState(false);
+  const { lang, setLang, tr } = useLanguage();
+  const navLinks = navItems.map(item => ({ ...item, label: tr.nav[item.key as keyof typeof tr.nav] }));
 
   useEffect(() => {
     const handleScroll = () => {
@@ -134,30 +137,140 @@ export default function Navbar() {
         className="fixed top-0 left-0 w-full z-40 px-8 md:px-14 py-5 flex items-center justify-between"
         style={{ pointerEvents: scrolled && !menuOpen ? "none" : "auto" }}
       >
-        <a
+        <motion.a
           href="#home"
           onClick={(e) => { e.preventDefault(); scrollTo("#home"); }}
-          className="text-xl md:text-2xl font-black uppercase tracking-wider text-dark"
+          className="text-xl md:text-2xl font-black uppercase tracking-wider text-dark flex items-baseline overflow-visible"
+          whileHover="hovered"
+          initial="rest"
+          animate="rest"
         >
-          Raul
-        </a>
-        <ul className="hidden md:flex gap-8 items-center">
-          {navLinks.map((link) => (
-            <li key={link.href}>
-              <a
-                href={link.href}
-                onClick={(e) => { e.preventDefault(); scrollTo(link.href); }}
-                className={`text-sm tracking-wide transition-colors duration-300 hover:text-accent ${
-                  activeSection === link.href.replace("#", "")
-                    ? "text-accent font-semibold"
-                    : "text-dark/60"
-                }`}
-              >
-                {link.label}
-              </a>
-            </li>
+          {/* R — falls off screen bottom, reappears from top, snaps back */}
+          <motion.span
+            className="inline-block"
+            style={{ display: "inline-block" }}
+            variants={{
+              rest: { y: 0, rotate: 0, opacity: 1 },
+              hovered: {
+                y:       [0,   "110vh",  "110vh",  "-120%",  0],
+                rotate:  [0,       22,      22,        0,    0],
+                opacity: [1,        1,       0,        0,    1],
+                transition: {
+                  duration: 1.8,
+                  times:   [0, 0.35, 0.36, 0.37, 1],
+                  ease:    ["easeIn", "linear", "linear", "easeOut"],
+                },
+              },
+            }}
+          >
+            R
+          </motion.span>
+          {/* Remaining letters of RAUL SEIDOV — subtle wave on hover */}
+          {["A", "U", "L", "\u00A0", "S", "E", "I", "D", "O", "V"].map((char, i) => (
+            <motion.span
+              key={i}
+              className="inline-block"
+              variants={{
+                rest: { y: 0 },
+                hovered: {
+                  y: [0, -5, 0],
+                  transition: {
+                    duration: 0.4,
+                    delay: 0.05 + i * 0.04,
+                    ease: "easeInOut",
+                  },
+                },
+              }}
+            >
+              {char}
+            </motion.span>
           ))}
+        </motion.a>
+        <div className="hidden md:flex items-center gap-1">
+        <ul className="flex gap-1 items-center">
+          {navLinks.map((link) => {
+            const isActive = activeSection === link.href.replace("#", "");
+            return (
+              <li key={link.href}>
+                <motion.a
+                  href={link.href}
+                  onClick={(e) => { e.preventDefault(); scrollTo(link.href); }}
+                  className="relative flex flex-col items-center px-4 py-2 group"
+                  whileHover="hover"
+                  initial="rest"
+                  animate="rest"
+                >
+                  {/* Pill background */}
+                  <motion.span
+                    className="absolute inset-0 rounded-full bg-dark/8"
+                    variants={{
+                      rest: { opacity: 0, scaleX: 0.7, scaleY: 0.6 },
+                      hover: { opacity: 1, scaleX: 1, scaleY: 1 },
+                    }}
+                    transition={{ duration: 0.25, ease: "easeOut" }}
+                  />
+
+                  {/* Number — slides down from above on hover */}
+                  <motion.span
+                    className="text-[9px] font-mono text-accent leading-none"
+                    variants={{
+                      rest: { opacity: 0, y: -6 },
+                      hover: { opacity: 1, y: 0 },
+                    }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                  >
+                    {link.num}
+                  </motion.span>
+
+                  {/* Label — shifts up slightly on hover */}
+                  <motion.span
+                    className={`relative text-sm tracking-wide font-medium transition-colors duration-200 ${
+                      isActive ? "text-accent" : "text-dark/60 group-hover:text-dark"
+                    }`}
+                    variants={{
+                      rest: { y: 0 },
+                      hover: { y: -1 },
+                    }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                  >
+                    {link.label}
+                  </motion.span>
+
+                  {/* Active dot */}
+                  {isActive && (
+                    <motion.span
+                      layoutId="nav-dot"
+                      className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-accent"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+
+                  {/* Hover underline (only when not active) */}
+                  {!isActive && (
+                    <motion.span
+                      className="absolute bottom-1 left-1/2 -translate-x-1/2 h-[2px] rounded-full bg-dark/30"
+                      variants={{
+                        rest: { width: 0, opacity: 0 },
+                        hover: { width: "60%", opacity: 1 },
+                      }}
+                      transition={{ duration: 0.25, ease: "easeOut" }}
+                    />
+                  )}
+                </motion.a>
+              </li>
+            );
+})}
         </ul>
+        {/* Language toggle */}
+        <button
+          onClick={() => setLang(lang === "en" ? "ru" : "en")}
+          className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-dark/20 text-xs font-bold tracking-wider hover:border-dark/50 transition-all duration-200 ml-1"
+        >
+          <span className={lang === "en" ? "text-accent" : "text-dark/40"}>EN</span>
+          <span className="text-dark/20 mx-0.5">/</span>
+          <span className={lang === "ru" ? "text-accent" : "text-dark/40"}>RU</span>
+        </button>
+        </div>
       </motion.nav>
 
       {/* ===== Burger Button ===== */}
@@ -296,7 +409,7 @@ export default function Navbar() {
                     ),
                   },
                   {
-                    href: "https://www.linkedin.com/",
+                    href: "https://www.linkedin.com/in/raul-seidov-6393ba354/",
                     icon: (
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
