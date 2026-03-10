@@ -9,12 +9,10 @@ const StackedLayers = dynamic(() => import("./StackedLayers"), { ssr: false });
 export default function ExperienceSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
-  // activeLayer: 0=bottom(Learning) … 3=top(newest), reversed from experiences array
   const [activeLayer, setActiveLayer] = useState(3);
   const { tr } = useLanguage();
   const experiences = tr.experience.items;
 
-  // Section enter animation
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -26,7 +24,6 @@ export default function ExperienceSection() {
     return () => observer.disconnect();
   }, []);
 
-  // Per-item scroll detection — highlights the line segment of the visible item
   useEffect(() => {
     const container = document.querySelector(".snap-container");
     const observers = itemRefs.current.map((el, idx) => {
@@ -52,7 +49,6 @@ export default function ExperienceSection() {
     >
       <div className="max-w-6xl w-full flex flex-col lg:flex-row gap-10 lg:gap-16 items-center">
 
-        {/* LEFT — timeline */}
         <div className="flex-1 min-w-0">
           <div className="section-content mb-10 text-center lg:text-left">
             <span className="text-xs uppercase tracking-[0.3em] text-dark/40 font-medium">
@@ -77,14 +73,12 @@ export default function ExperienceSection() {
                   onMouseEnter={() => setActiveLayer(layerIdx)}
                   onMouseLeave={() => setActiveLayer(3)}
                 >
-                  {/* Right-side line segment — full height of this item */}
                   <div
                     className={`absolute right-6 top-0 w-0.5 transition-colors duration-500 ${
                       isLast ? "bottom-6" : "bottom-0"
                     } ${isActive ? "bg-accent" : "bg-dark/15"}`}
                   />
 
-                  {/* Dot on the line */}
                   <div
                     className={`absolute right-[18px] top-5 w-3 h-3 rounded-full border-2 z-10 transition-all duration-300 ${
                       isActive
@@ -127,7 +121,6 @@ export default function ExperienceSection() {
           </div>
         </div>
 
-        {/* RIGHT — 3D Stacked Layers */}
         <div className="w-full lg:w-[400px] xl:w-[460px] h-[340px] md:h-[420px] lg:h-[500px] shrink-0">
           <StackedLayers activeIndex={activeLayer} />
         </div>
