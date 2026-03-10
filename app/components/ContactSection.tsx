@@ -25,12 +25,16 @@ export default function ContactSection() {
     return () => observer.disconnect();
   }, []);
 
+  // Sticky footer reveal — technique: outer clips, inner rises via sticky
   return (
-    <section
-      id="contact"
-      ref={sectionRef}
-      className="snap-section section-contact bg-black-section flex items-center justify-center px-6 md:px-16 py-20"
-    >
+    <div className="relative h-screen" style={{ clipPath: "polygon(0% 0, 100% 0%, 100% 100%, 0 100%)" }}>
+      <div className="relative h-[200vh] -top-[100vh]">
+        <div className="h-screen sticky top-0">
+          <section
+            id="contact"
+            ref={sectionRef}
+            className="h-full bg-black-section flex items-center justify-center px-6 md:px-16 py-20 shadow-[0_-20px_60px_rgba(0,0,0,0.5)]"
+          >
       <div className="max-w-6xl w-full flex flex-col md:flex-row items-center gap-12">
 
         {/* Left — text & buttons */}
@@ -98,6 +102,9 @@ export default function ContactSection() {
         </div>
 
       </div>
-    </section>
+          </section>
+        </div>
+      </div>
+    </div>
   );
 }

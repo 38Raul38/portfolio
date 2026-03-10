@@ -8,30 +8,47 @@ const StackedLayers = dynamic(() => import("./StackedLayers"), { ssr: false });
 
 export default function ExperienceSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  // activeLayer: 0=bottom(Learning) … 3=top(Frontend), reversed from experiences array
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  // activeLayer: 0=bottom(Learning) … 3=top(newest), reversed from experiences array
   const [activeLayer, setActiveLayer] = useState(3);
   const { tr } = useLanguage();
   const experiences = tr.experience.items;
 
+  // Section enter animation
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("animate-in");
-        }
+        if (entry.isIntersecting) entry.target.classList.add("animate-in");
       },
       { threshold: 0.1 }
     );
-
     if (sectionRef.current) observer.observe(sectionRef.current);
     return () => observer.disconnect();
   }, []);
+
+  // Per-item scroll detection — highlights the line segment of the visible item
+  useEffect(() => {
+    const container = document.querySelector(".snap-container");
+    const observers = itemRefs.current.map((el, idx) => {
+      if (!el) return null;
+      const layerIdx = experiences.length - 1 - idx;
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) setActiveLayer(layerIdx);
+        },
+        { root: container as Element, threshold: 0.6 }
+      );
+      obs.observe(el);
+      return obs;
+    });
+    return () => observers.forEach(obs => obs?.disconnect());
+  }, [experiences.length]);
 
   return (
     <section
       id="experience"
       ref={sectionRef}
-      className="snap-section section-overlay-sticky bg-white-section torn-edge-top torn-edge-bottom torn-white flex items-center justify-center px-6 md:px-16 py-20"
+      className="snap-section section-overlay bg-white-section torn-edge-top torn-edge-bottom torn-white flex items-center justify-center px-6 md:px-16 py-20"
     >
       <div className="max-w-6xl w-full flex flex-col lg:flex-row gap-10 lg:gap-16 items-center">
 
@@ -46,62 +63,67 @@ export default function ExperienceSection() {
             </h2>
           </div>
 
-          <div className="relative">
-            <div className="timeline-line text-dark/20" />
-            <div className="space-y-8">
-              {experiences.map((exp, idx) => {
-                // experiences[0]=newest=top layer(3), experiences[3]=oldest=bottom layer(0)
-                const layerIdx = experiences.length - 1 - idx;
-                const isActive = activeLayer === layerIdx;
-                return (
+          <div className="space-y-2">
+            {experiences.map((exp, idx) => {
+              const layerIdx = experiences.length - 1 - idx;
+              const isActive = activeLayer === layerIdx;
+              const isLast = idx === experiences.length - 1;
+              return (
+                <div
+                  key={exp.year}
+                  ref={el => { itemRefs.current[idx] = el; }}
+                  className="section-content relative pr-14 cursor-pointer"
+                  style={{ transitionDelay: `${idx * 150 + 200}ms` }}
+                  onMouseEnter={() => setActiveLayer(layerIdx)}
+                  onMouseLeave={() => setActiveLayer(3)}
+                >
+                  {/* Right-side line segment — full height of this item */}
                   <div
-                    key={exp.year}
-                    className="section-content relative pl-10 cursor-pointer"
-                    style={{ transitionDelay: `${idx * 150 + 200}ms` }}
-                    onMouseEnter={() => setActiveLayer(layerIdx)}
-                    onMouseLeave={() => setActiveLayer(3)}
-                  >
-                    {/* Dot */}
-                    <div
-                      className={`absolute left-[0.55rem] top-1.5 w-3 h-3 rounded-full border-2 z-10 transition-all duration-300 ${
-                        isActive
-                          ? "bg-accent border-accent scale-125"
-                          : "bg-dark/20 border-dark/20"
-                      }`}
-                    />
+                    className={`absolute right-6 top-0 w-0.5 transition-colors duration-500 ${
+                      isLast ? "bottom-6" : "bottom-0"
+                    } ${isActive ? "bg-accent" : "bg-dark/15"}`}
+                  />
 
-                    <div
-                      className={`rounded-2xl p-5 transition-all duration-300 ${
-                        isActive
-                          ? "bg-accent/6 border border-accent/20"
-                          : "border border-transparent"
+                  {/* Dot on the line */}
+                  <div
+                    className={`absolute right-[18px] top-5 w-3 h-3 rounded-full border-2 z-10 transition-all duration-300 ${
+                      isActive
+                        ? "bg-accent border-accent scale-125 shadow-[0_0_0_4px_rgba(192,57,43,0.15)]"
+                        : "bg-white border-dark/20"
+                    }`}
+                  />
+
+                  <div
+                    className={`rounded-2xl p-5 transition-all duration-300 ${
+                      isActive
+                        ? "bg-accent/6 border border-accent/20"
+                        : "border border-transparent"
+                    }`}
+                  >
+                    <span
+                      className={`text-sm font-bold tracking-wide transition-colors duration-300 ${
+                        isActive ? "text-accent" : "text-dark/40"
                       }`}
                     >
-                      <span
-                        className={`text-sm font-bold tracking-wide transition-colors duration-300 ${
-                          isActive ? "text-accent" : "text-dark/40"
-                        }`}
-                      >
-                        {exp.year}
-                      </span>
-                      <h3 className="text-lg md:text-xl font-bold text-dark mt-1">
-                        {exp.role}
-                      </h3>
-                      <p className="text-dark/40 text-xs font-medium uppercase tracking-wider mt-0.5">
-                        {exp.company}
-                      </p>
-                      <p
-                        className={`text-sm leading-relaxed mt-2 transition-all duration-300 ${
-                          isActive ? "text-dark/70" : "text-dark/50"
-                        }`}
-                      >
-                        {exp.description}
-                      </p>
-                    </div>
+                      {exp.year}
+                    </span>
+                    <h3 className="text-lg md:text-xl font-bold text-dark mt-1">
+                      {exp.role}
+                    </h3>
+                    <p className="text-dark/40 text-xs font-medium uppercase tracking-wider mt-0.5">
+                      {exp.company}
+                    </p>
+                    <p
+                      className={`text-sm leading-relaxed mt-2 transition-all duration-300 ${
+                        isActive ? "text-dark/70" : "text-dark/50"
+                      }`}
+                    >
+                      {exp.description}
+                    </p>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
